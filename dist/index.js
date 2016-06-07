@@ -96,34 +96,45 @@ function parseTags(tagName) {
   var props = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
   var tags = [];
-  var contentKey = tagName === 'link' ? 'href' : 'content';
-  Object.keys(props).forEach(function (groupKey) {
-    var group = props[groupKey];
-    if (typeof group === 'string') {
-      tags.push(_defineProperty({
-        tagName: tagName
-      }, groupKey, group));
-      return;
-    }
-    Object.keys(group).forEach(function (key) {
-      var values = Array.isArray(group[key]) ? group[key] : [group[key]];
-      values.forEach(function (value) {
-        var _tags$push2;
+  //var contentKey = tagName === 'link' ? 'href' : 'content';
 
-        if (value === null) {
-          return;
-        }
-        tags.push((_tags$push2 = {
-          tagName: tagName
-        }, _defineProperty(_tags$push2, groupKey, key), _defineProperty(_tags$push2, contentKey, value), _tags$push2));
-      });
-    });
-  });
+  // ABL Replacing the garbage code below with a simplification that handles just 1-level elements
+  var res = Object.keys(props).reduce(function (o,key) {
+    o[key] = props[key]
+    return o;
+  }, {tagName: tagName})
+  tags.push(res)
+
+  /*
+   Object.keys(props).forEach(function (groupKey) {
+   var group = props[groupKey];
+   if (typeof group === 'string') {
+   tags.push(_defineProperty({
+   tagName: tagName
+   }, groupKey, group));
+   }
+   else {
+   Object.keys(group).forEach(function (key) {
+   var values = Array.isArray(group[key]) ? group[key] : [group[key]];
+   values.forEach(function (value) {
+   var _tags$push2;
+
+   if (value === null) {
+   return;
+   }
+   tags.push((_tags$push2 = {
+   tagName: tagName
+   }, _defineProperty(_tags$push2, groupKey, key), _defineProperty(_tags$push2, contentKey, value), _tags$push2));
+   });
+   });
+   }
+   });
+   */
   return tags;
 }
 
 function getTags(_props) {
-  return [].concat(parseTags('meta', _props.meta), parseTags('link', _props.link));
+  return [].concat(parseTags('meta', _props.meta), parseTags('link', _props.link), parseTags('style', _props.style));
 }
 
 function removeNode(node) {
@@ -142,7 +153,13 @@ function insertDocumentMetaNode(entry) {
   var newNode = document.createElement(tagName);
   for (var prop in attr) {
     if (entry.hasOwnProperty(prop)) {
-      newNode.setAttribute(prop, entry[prop]);
+      // ABL adding support fort element text (for the <style> tag)
+      if (prop=='_text') {
+        var t = document.createTextNode(entry[prop]);
+        newNode.appendChild(t);
+      }
+      else
+        newNode.setAttribute(prop, entry[prop]);
     }
   }
   newNode.setAttribute('data-rdm', '');
@@ -181,9 +198,9 @@ function render() {
 
   if (meta.title) {
     tags.push(_react2.default.createElement(
-      'title',
-      { key: i++ },
-      meta.title
+        'title',
+        { key: i++ },
+        meta.title
     ));
   }
 
@@ -197,9 +214,9 @@ function render() {
   }
 
   return (0, _server.renderToStaticMarkup)(_react2.default.createElement(
-    'div',
-    null,
-    tags
+      'div',
+      null,
+      tags
   )).replace(/(^<div>|<\/div>$)/g, '');
 }
 
@@ -220,9 +237,9 @@ var DocumentMeta = _react2.default.createClass({
 
     var count = _react2.default.Children.count(children);
     return count === 1 ? _react2.default.Children.only(children) : count ? _react2.default.createElement(
-      'div',
-      null,
-      this.props.children
+        'div',
+        null,
+        this.props.children
     ) : null;
   }
 });
